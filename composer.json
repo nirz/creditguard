@@ -1,5 +1,5 @@
 {
-  "name":"tomerofer/CreditGuard",
+  "name":"tomerofer/creditguard",
   "description":"CreditGuard Interface Class",
   "license":"MIT",
   "keywords":["CreditGuard", "Credit Guard"],
@@ -9,8 +9,13 @@
       "email":"tomerofer@gmail.com"
     }
   ],
-  "require":{},
-  "require-dev":{
-    "phpunit/phpunit":"5.1.*"
+  "require":{
+    "php": ">=5.4.0"
+  },
+  "require-dev":{},
+  "autoload":{
+    "psr-4":{
+      "TomerOfer\\CreditGuard\\":"src"
+    }
   }
 }
