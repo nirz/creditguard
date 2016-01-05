@@ -1,0 +1,16 @@
+{
+  "name":"tomerofer/CreditGuard",
+  "description":"CreditGuard Interface Class",
+  "license":"MIT",
+  "keywords":["CreditGuard", "Credit Guard"],
+  "authors":[
+    {
+      "name":"Tomer Ofer",
+      "email":"tomerofer@gmail.com"
+    }
+  ],
+  "require":{},
+  "require-dev":{
+    "phpunit/phpunit":"5.1.*"
+  }
+}
