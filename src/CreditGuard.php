@@ -36,7 +36,7 @@ class CreditGuard
      * @param String $currency (ILS|USD)
      *
      */
-    public function __construct($user_name = "israeli",$password = "I!fr43s!34",$terminal = "0962832",$mid = "938",$gateway = "https://cguat2.creditguard.co.il/xpo/Relay",$language = "Eng",$currency = "ILS")
+    public function __construct($user_name = "",$password = "",$terminal = "",$mid = "",$gateway = "",$language = "Eng",$currency = "ILS")
     {
         $this->user_name = $user_name;
         $this->password = $password;
@@ -71,7 +71,12 @@ class CreditGuard
             if(stripos($curl_result,'HEB') !== false){
                 $curl_result = iconv("utf-8", "iso-8859-8", $curl_result);
             }
-            $responseXml = simplexml_load_string($curl_result);
+            try{
+                $responseXml = simplexml_load_string($curl_result);
+            }catch(\Exception $e){
+                $responseXml = false;
+                $result["responseParsingException"] = $e->getMessage();
+            }
             if($responseXml !== false){
                 if(isset($responseXml->response->result)){
                     if($responseXml->response->result == "000"){
@@ -183,10 +188,10 @@ XML;
         if(empty($response["result"])){
             return false;
         }else{
-            if($response["result"] == "405"){
-                return false;
+            if($response["result"] == "682"){
+                return true;
             }
-            return true;
+            return false;
         }
     }
 

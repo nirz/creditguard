@@ -11,7 +11,7 @@ $autoloader->add('App',__DIR__.'/../src/');
 
 use TomerOfer\CreditGuard\CreditGuard;
 
-$creditGuard = new CreditGuard();
+$creditGuard = new CreditGuard("israeli","I!fr43s!34","0962832","938","https://cguat2.creditguard.co.il/xpo/Relay");
 
 $creditGuard->setLanguage("Heb"); // default: Eng
 $creditGuard->setSuccessUrl("https://your-domain.com/transactionSuccess");
@@ -19,10 +19,12 @@ $creditGuard->setErrorUrl("https://your-domain.com/transactionError");
 $creditGuard->setCancelUrl("https://your-domain.com/transactionFailed");
 
 // check if user credentials is valid
-// $creditGuard->validCredentials()
+// $creditGuard->credentialsIsValid(); // return true or false
 
 // get the url to redirect the user
-$response = $creditGuard->getRedirectUrl(uniqid(),200,2);
+// $response = $creditGuard->getRedirectUrl(uniqid(),200,2); // return array
+// print_r($response);
+
 /*
  * Success response example:
 Array
@@ -36,6 +38,3 @@ Array
 
 * Save those token and uniqid in your database and wen the user coming back to "successUrl" collect the data from CreditGuard
 */
-
-
-//print_r($creditGuard);
