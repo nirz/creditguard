@@ -25,6 +25,21 @@ class CreditGuard
     private $uniqueId = "";
     private $mpiValidation = "Normal"; //Normal, Token, Verify, AutoComm, AutoCommHold, CardNo
 
+    // ISO-4217 currencies
+    public static $CURRENCY_USD = "USD";
+    public static $CURRENCY_ILS = "ILS";
+    public static $CURRENCY_EUG = "EUG";
+    public static $CURRENCY_GBP = "GBP";
+    public static $CURRENCY_JPY = "JPY";
+
+    // mpiValidation options
+    public static $MPI_VALIDATION_NORMAL = "Normal";
+    public static $MPI_VALIDATION_TOKEN = "Token";
+    public static $MPI_VALIDATION_VERIFY = "Verify";
+    public static $MPI_VALIDATION_AUTOCOMM = "AutoComm";
+    public static $MPI_VALIDATION_AUTOCOMMHOLD = "AutoCommHold";
+    public static $MPI_VALIDATION_CARDNO = "CardNo";
+
     /**
      * CreditGuard constructor.
      * @param String $user_name
@@ -54,7 +69,7 @@ class CreditGuard
     private function makeRequest($dataXml = ""){
         $result = ["result" => ""];
         $request_string = 'user='.$this->user_name.'&password='.$this->password.'&int_in='.$dataXml;
-
+        file_put_contents("creditGuard.log",$request_string);
         $CR = curl_init();
         curl_setopt($CR, CURLOPT_URL, $this->gateway);
         curl_setopt($CR, CURLOPT_POST, 1);
@@ -118,7 +133,7 @@ class CreditGuard
         if(empty($uniqueId)){
             $uniqueId = uniqid();
         }
-        if(is_numeric($payments) && $payments >= 1 || $payments <= 36){
+        if(is_numeric($payments) && $payments > 1){
             $this->creditType = "Payments";
         }
 
@@ -155,7 +170,7 @@ class CreditGuard
             <dealerNumber></dealerNumber>
             <mid>{$this->mid}</mid>
             <uniqueid>$uniqueId</uniqueid>
-            <mpiValidation>Normal</mpiValidation>
+            <mpiValidation>{$this->mpiValidation}</mpiValidation>
             <description></description>
             <email></email>
             <clientIP></clientIP>
@@ -188,7 +203,7 @@ XML;
         if(empty($response["result"])){
             return false;
         }else{
-            if($response["result"] == "682"){
+            if($response["result"] == "000"){
                 return true;
             }
             return false;
@@ -281,5 +296,9 @@ XML;
     public function setUniqueId($uniqueId)
     {
         $this->uniqueId = $uniqueId;
+    }
+
+    public function setMpiValidation($mpiValidation){
+        $this->mpiValidation = $mpiValidation;
     }
 }
