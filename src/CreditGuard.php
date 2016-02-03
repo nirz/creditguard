@@ -7,7 +7,7 @@
  */
 
 namespace TomerOfer\CreditGuard;
-
+use SoapBox\Formatter\Formatter;
 
 class CreditGuard
 {
@@ -24,6 +24,7 @@ class CreditGuard
     private $creditType = "RegularCredit"; //RegularCredit, Payments, IsraCredit, SpecialCredit, SpecialAlpha, PaymentsClub
     private $uniqueId = "";
     private $mpiValidation = "Normal"; //Normal, Token, Verify, AutoComm, AutoCommHold, CardNo
+    private $cardOwnerId = "123456789"; //Israel Credit Cards Require owner id
 
     // ISO-4217 currencies
     public static $CURRENCY_USD = "USD";
@@ -67,9 +68,10 @@ class CreditGuard
      * @return array
      */
     private function makeRequest($dataXml = ""){
+        // clean the xml from header and root
+        $dataXml = str_replace('<?xml version="1.0" encoding="utf-8"?>','',str_replace('<xml>','',str_replace('</xml>','',$dataXml)));
         $result = ["result" => ""];
         $request_string = 'user='.$this->user_name.'&password='.$this->password.'&int_in='.$dataXml;
-        file_put_contents("creditGuard.log",$request_string);
         $CR = curl_init();
         curl_setopt($CR, CURLOPT_URL, $this->gateway);
         curl_setopt($CR, CURLOPT_POST, 1);
@@ -87,36 +89,16 @@ class CreditGuard
                 $curl_result = iconv("utf-8", "iso-8859-8", $curl_result);
             }
             try{
-                $responseXml = simplexml_load_string($curl_result);
+                $formatter = Formatter::make($curl_result,Formatter::XML);
+                $response = $formatter->toArray();
+                if(isset($response["response"])){
+                    $result = $response["response"];
+                }else{
+                    $result["responseFormatError"] = "no response root in XML";
+                }
             }catch(\Exception $e){
                 $responseXml = false;
                 $result["responseParsingException"] = $e->getMessage();
-            }
-            if($responseXml !== false){
-                if(isset($responseXml->response->result)){
-                    if($responseXml->response->result == "000"){
-                        $result["result"] = (string)$responseXml->response->result;
-                        if(isset($responseXml->response->doDeal->mpiHostedPageUrl)){
-                            $result["url"] = (string)$responseXml->response->doDeal->mpiHostedPageUrl;
-                        }
-                        if(isset($responseXml->response->doDeal->token)){
-                            $result["token"] = (string)$responseXml->response->doDeal->token;
-                        }
-                        if(isset($responseXml->response->doDeal->token)){
-                            $result["token"] = (string)$responseXml->response->doDeal->token;
-                        }
-                        if(isset($responseXml->response->doDeal->uniqueid)){
-                            $result["uniqueid"] = (string)$responseXml->response->doDeal->uniqueid;
-                        }
-                        if(isset($responseXml->response->doDeal->email)){
-                            $result["email"] = (string)$responseXml->response->doDeal->email;
-                        }
-                    }else{
-                        $result["result"] = (string)$responseXml->response->result;
-                        $result["message"] = (string)$responseXml->response->userMessage;
-                        $result["additionalInfo"] = (string)$responseXml->response->additionalInfo;
-                    }
-                }
             }
         }
         curl_close( $CR );
@@ -140,59 +122,104 @@ class CreditGuard
         // total need to be in Agorot (or cents in USD or EUR)
         $total = $total * 100;
 
+        $dataArray = [
+            "ashrait" => [
+                "request" => [
+                    "command" => "doDeal",
+                    "requestId" => "",
+                    "version" => "1001",
+                    "language" => $this->language,
+                    "doDeal" => [
+                        "successUrl" => $this->successUrl,
+                        "errorUrl" => $this->errorUrl,
+                        "cancelUrl" => $this->errorUrl,
+                        "terminalNumber" => $this->terminal,
+                        "cardNo" => "CGMPI",
+                        "creditType" => $this->creditType,
+                        "currency" => $this->currency,
+                        "transactionCode" => "Phone",
+                        "transactionType" => "Debit",
+                        "cardId" => "",
+                        "total" => $total,
+                        "validation" => "TxnSetup",
+                        "user" => "",
+                        "mainTerminalNumber" => "",
+                        "authNumber" => "",
+                        "numberOfPayments" => $payments,
+                        "firstPayment" => "",
+                        "periodicalPayment" => "",
+                        "dealerNumber" => "",
+                        "mid" => $this->mid,
+                        "uniqueid" => $uniqueId,
+                        "mpiValidation" => $this->mpiValidation,
+                        "description" => "",
+                        "email" => "",
+                        "clientIP" => "",
+                        "saleDetailsMAC" => "",
+                        "customerData" => [
+                            "userData1" => "",
+                            "userData2" => "",
+                            "userData3" => "",
+                            "userData4" => "",
+                            "userData5" => "",
+                            "userData6" => "",
+                            "userData7" => "",
+                            "userData8" => "",
+                            "userData9" => "",
+                            "userData10" => ""
+                        ]
+                    ]
+                ]
+            ]
+        ];
+
         // build the xml for the request
-        $dataXml = <<<XML
-<ashrait>
-    <request>
-        <command>doDeal</command>
-        <requestId/>
-        <version>1001</version>
-        <language>{$this->language}</language>
-        <doDeal>
-            <successUrl>{$this->successUrl}</successUrl>
-            <errorUrl>{$this->errorUrl}</errorUrl>
-            <cancelUrl>{$this->errorUrl}</cancelUrl>
-            <terminalNumber>{$this->terminal}</terminalNumber>
-            <cardNo>CGMPI</cardNo>
-            <creditType>{$this->creditType}</creditType>
-            <currency>{$this->currency}</currency>
-            <transactionCode>Phone</transactionCode>
-            <transactionType>Debit</transactionType>
-            <cardId></cardId>
-            <total>{$total}</total>
-            <validation>TxnSetup</validation>
-            <user></user>
-            <mainTerminalNumber></mainTerminalNumber>
-            <authNumber></authNumber>
-            <numberOfPayments>{$payments}</numberOfPayments>
-            <firstPayment></firstPayment>
-            <periodicalPayment></periodicalPayment>
-            <dealerNumber></dealerNumber>
-            <mid>{$this->mid}</mid>
-            <uniqueid>$uniqueId</uniqueid>
-            <mpiValidation>{$this->mpiValidation}</mpiValidation>
-            <description></description>
-            <email></email>
-            <clientIP></clientIP>
-            <saleDetailsMAC></saleDetailsMAC>
-            <customerData>
-                <userData1/>
-                <userData2/>
-                <userData3/>
-                <userData4/>
-                <userData5/>
-                <userData6/>
-                <userData7/>
-                <userData8/>
-                <userData9/>
-                <userData10/>
-            </customerData>
-        </doDeal>
-    </request>
-</ashrait>
-XML;
+        $formatter = Formatter::make($dataArray,Formatter::ARR);
         // build the request string with the username, password and the xml
-        return $this->makeRequest($dataXml);
+        return $this->makeRequest($formatter->toXml());
+    }
+
+    public function authorizationRequest($uniqueId = "", $total = 1.0, $payments = 0){
+        if(empty($uniqueId)){
+            $uniqueId = uniqid();
+        }
+        if(is_numeric($payments) && $payments > 1){
+            $this->creditType = "Payments";
+        }
+
+        // total need to be in Agorot (or cents in USD or EUR)
+        $total = $total * 100;
+        $dateTimeNow = date('Y-m-d H:i:s');
+
+        $dataArray = [
+            "ashrait" => [
+                "request" => [
+                    "command" => "doDeal",
+                    "requestId" => "",
+                    "dateTime" => $dateTimeNow,
+                    "version" => "1001",
+                    "language" => $this->language,
+                    "mayBeDuplicate" => 0,
+                    "doDeal" => [
+                        "terminalNumber" => $this->terminal,
+                        "cardNo" => "4580458045804580",
+                        "cardExpiration" => "0716",
+                        "id" => $this->cardOwnerId,
+                        "creditType" => $this->creditType,
+                        "currency" => $this->currency,
+                        "transactionCode" => "Phone",
+                        "transactionType" => "Debit",
+                        "total" => $total,
+                        "validation" => "Verify",
+                        "user" => $uniqueId,
+                    ]
+                ]
+            ]
+        ];
+        // build the xml for the request
+        $formatter = Formatter::make($dataArray,Formatter::ARR);
+        // build the request string with the username, password and the xml
+        return $this->makeRequest($formatter->toXml());
     }
 
     /**

@@ -13,17 +13,18 @@ use TomerOfer\CreditGuard\CreditGuard;
 
 $creditGuard = new CreditGuard("israeli","I!fr43s!34","0962832","938","https://cguat2.creditguard.co.il/xpo/Relay");
 
-$creditGuard->setLanguage("Heb"); // default: Eng
+$creditGuard->setLanguage("Eng"); // default: Eng
 $creditGuard->setSuccessUrl("https://your-domain.com/transactionSuccess");
 $creditGuard->setErrorUrl("https://your-domain.com/transactionError");
 $creditGuard->setCancelUrl("https://your-domain.com/transactionFailed");
 
 // check if user credentials is valid
 // $creditGuard->credentialsIsValid(); // return true or false
+$response = $creditGuard->authorizationRequest(uniqid(),1000000);
 
 // get the url to redirect the user
-// $response = $creditGuard->getRedirectUrl(uniqid(),200,2); // return array
-// print_r($response);
+//$response = $creditGuard->getRedirectUrl(uniqid(),200,2); // return array
+print_r($response);
 
 /*
  * Success response example:

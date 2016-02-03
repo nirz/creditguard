@@ -11,6 +11,7 @@
   ],
   "require":{
     "php": ">=5.4.0",
+    "soapbox/laravel-formatter": "2.x",
     "ext-curl":"*"
   },
   "require-dev":{},
