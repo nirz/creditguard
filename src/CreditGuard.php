@@ -23,6 +23,7 @@ class CreditGuard
     private $cancelUrl = "";
     private $creditType = "RegularCredit"; //RegularCredit, Payments, IsraCredit, SpecialCredit, SpecialAlpha, PaymentsClub
     private $uniqueId = "";
+    private $validation = "AutoComm"; //Normal, Token, Verify, AutoComm, AutoCommHold, CardNo
     private $mpiValidation = "Normal"; //Normal, Token, Verify, AutoComm, AutoCommHold, CardNo
     private $cardOwnerId = "123456789"; //Israel Credit Cards Require owner id
 
@@ -34,12 +35,14 @@ class CreditGuard
     public static $CURRENCY_JPY = "JPY";
 
     // mpiValidation options
-    public static $MPI_VALIDATION_NORMAL = "Normal";
-    public static $MPI_VALIDATION_TOKEN = "Token";
-    public static $MPI_VALIDATION_VERIFY = "Verify";
-    public static $MPI_VALIDATION_AUTOCOMM = "AutoComm";
-    public static $MPI_VALIDATION_AUTOCOMMHOLD = "AutoCommHold";
-    public static $MPI_VALIDATION_CARDNO = "CardNo";
+    public static $VALIDATION_NORMAL = "Normal";
+    // only getting the token for later transactions
+    public static $VALIDATION_TOKEN = "Token";
+    // getting the token and holding funds for later transaction
+    public static $VALIDATION_VERIFY = "Verify";
+    public static $VALIDATION_AUTOCOMM = "AutoComm";
+    public static $VALIDATION_AUTOCOMMHOLD = "AutoCommHold";
+    public static $VALIDATION_CARDNO = "CardNo";
 
     /**
      * CreditGuard constructor.
@@ -179,24 +182,33 @@ class CreditGuard
         return $this->makeRequest($formatter->toXml());
     }
 
-    public function authorizationRequest($uniqueId = "", $total = 1.0, $payments = 0){
+    public function getRedirectUrlForToken($uniqueId = "", $total = 1.0){
+        $this->mpiValidation = self::$VALIDATION_TOKEN;
+        return $this->getRedirectUrl($uniqueId, $total);
+    }
+
+    public function getRedirectUrlForTokenWithVerify($uniqueId = "", $total = 1.0){
+        $this->mpiValidation = self::$VALIDATION_VERIFY;
+        return $this->getRedirectUrl($uniqueId, $total);
+    }
+
+    public function makeTransactionWithToken($token = null, $uniqueId = "", $total = 1.0){
+        if(is_null($token)){
+            return ['response' => 'invalid token'];
+        }
         if(empty($uniqueId)){
             $uniqueId = uniqid();
-        }
-        if(is_numeric($payments) && $payments > 1){
-            $this->creditType = "Payments";
         }
 
         // total need to be in Agorot (or cents in USD or EUR)
         $total = $total * 100;
-        $dateTimeNow = date('Y-m-d H:i:s');
 
         $dataArray = [
             "ashrait" => [
                 "request" => [
                     "command" => "doDeal",
                     "requestId" => "",
-                    "dateTime" => $dateTimeNow,
+                    "dateTime" => date('Y-m-d H:i:s'),
                     "version" => "1001",
                     "language" => $this->language,
                     "mayBeDuplicate" => 0,
@@ -210,7 +222,7 @@ class CreditGuard
                         "transactionCode" => "Phone",
                         "transactionType" => "Debit",
                         "total" => $total,
-                        "validation" => "Verify",
+                        "validation" => $this->validation,
                         "user" => $uniqueId,
                     ]
                 ]
