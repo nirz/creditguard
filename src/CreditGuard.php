@@ -192,7 +192,7 @@ class CreditGuard
         return $this->getRedirectUrl($uniqueId, $total);
     }
 
-    public function makeTransactionWithToken($token = null, $uniqueId = "", $total = 1.0){
+    public function makeTransactionWithToken($token = null,$cardExpiration = "", $uniqueId = "", $total = 1.0){
         if(is_null($token)){
             return ['response' => 'invalid token'];
         }
@@ -214,8 +214,8 @@ class CreditGuard
                     "mayBeDuplicate" => 0,
                     "doDeal" => [
                         "terminalNumber" => $this->terminal,
-                        "cardNo" => "4580458045804580",
-                        "cardExpiration" => "0716",
+                        "cardNo" => $token,
+                        "cardExpiration" => $cardExpiration,
                         "id" => $this->cardOwnerId,
                         "creditType" => $this->creditType,
                         "currency" => $this->currency,
