@@ -21,8 +21,8 @@ $creditGuard->setCancelUrl("https://your-domain.com/transactionFailed");
 // check if user credentials is valid
 // $creditGuard->credentialsIsValid(); // return true or false
 //  $response = $creditGuard->getRedirectUrlForToken(uniqid(),100);
-$response = $creditGuard->makeTransactionWithToken("1074946602134580",uniqid(),200);
-print_r($response);
+// $response = $creditGuard->makeTransactionWithToken("1074946602134580",uniqid(),200);
+//print_r($response);
 
 // get the url to redirect the user
 // $response = $creditGuard->getRedirectUrl(uniqid(),200,2); // return array
