@@ -214,7 +214,8 @@ class CreditGuard
                     "mayBeDuplicate" => 0,
                     "doDeal" => [
                         "terminalNumber" => $this->terminal,
-                        "cardNo" => $token,
+                        "cardNo" => "",
+                        "cardId" => $token,
                         "cardExpiration" => $cardExpiration,
                         "id" => $this->cardOwnerId,
                         "creditType" => $this->creditType,
