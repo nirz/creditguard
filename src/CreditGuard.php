@@ -123,7 +123,7 @@ class CreditGuard
         }
 
         // total need to be in Agorot (or cents in USD or EUR)
-        $total = $total * 100;
+        $total = floor($total * 100);
 
         $dataArray = [
             "ashrait" => [
@@ -201,7 +201,7 @@ class CreditGuard
         }
 
         // total need to be in Agorot (or cents in USD or EUR)
-        $total = $total * 100;
+        $total = floor($total * 100);
 
         $dataArray = [
             "ashrait" => [
